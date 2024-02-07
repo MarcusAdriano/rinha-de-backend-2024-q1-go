@@ -30,8 +30,5 @@ func main() {
 		return c.SendString("Hello, rinha de backend 2024 q1")
 	})
 
-	err := app.Listen(":3000")
-	if err != nil {
-		log.Fatal().Msgf("Error: %s", err)
-	}
+	log.Fatal().Err(app.Listen(":3000"))
 }
