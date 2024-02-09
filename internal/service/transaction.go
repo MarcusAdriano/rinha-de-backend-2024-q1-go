@@ -1,17 +1,87 @@
 package service
 
+import (
+	"context"
+	"errors"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository/postgres"
+)
+
 type CreateTransactionParams struct {
-	UserId      float64
-	Value       float64
+	UserId      int32
+	Value       int32
 	Type        TransactionType
 	Description string
 }
 
 type TransactionCreated struct {
-	Limit   float64 `json:"limite"`
-	Balance float64 `json:"balance"`
+	Limit   int32 `json:"limite"`
+	Balance int32 `json:"balance"`
 }
 
 type TransactionService interface {
-	Create(params CreateTransactionParams) (TransactionCreated, error)
+	Create(ctx context.Context, params CreateTransactionParams) (*TransactionCreated, error)
+}
+
+type transactionService struct {
+	dbpool *pgxpool.Pool
+}
+
+func NewTransactionService(dbpool *pgxpool.Pool) TransactionService {
+	return &transactionService{
+		dbpool: dbpool,
+	}
+}
+
+func (s *transactionService) Create(ctx context.Context, params CreateTransactionParams) (*TransactionCreated, error) {
+
+	tx, err := s.dbpool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	q := postgres.New(s.dbpool)
+	qtx := q.WithTx(tx)
+
+	if params.Type == Debit {
+		params.Value *= -1
+	}
+
+	u, err := qtx.UpdateUserBalance(ctx, postgres.UpdateUserBalanceParams{
+		Balance: params.Value,
+		ID:      params.UserId,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrCustomerNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	if params.Type == Debit && u.Balance < u.BalanceLimit*-1 {
+		return nil, ErrInsufficientLimit
+	}
+
+	query := postgres.CreateTransactionParams{
+		UserID:      params.UserId,
+		Amount:      params.Value,
+		Description: params.Description,
+		Ttype:       string(params.Type),
+	}
+
+	err = qtx.CreateTransaction(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &TransactionCreated{
+		Limit:   u.BalanceLimit,
+		Balance: u.Balance,
+	}, nil
 }
