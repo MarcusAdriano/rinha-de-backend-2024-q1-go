@@ -3,10 +3,13 @@ package http
 import (
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/service"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
+)
+
+var (
+	Validator = validator.New()
 )
 
 type TransactionRestHandler struct {
@@ -19,25 +22,39 @@ func NewTransactionRestHandler(srv service.TransactionService) *TransactionRestH
 }
 
 func (r *TransactionRestHandler) Register(app *fiber.App) {
-	app.Post("/clientes/:id/transacoes", r.CreateTransaction)
+	app.Post("/clientes/:id/transacoes", validateCreateTransaction, r.CreateTransaction)
 }
 
 type createTransactionRequest struct {
-	Amount      int32  `json:"valor"`
-	Type        string `json:"tipo"`
-	Description string `json:"descricao"`
+	Amount      int64  `json:"valor" validate:"required"`
+	Type        string `json:"tipo" validate:"required,oneof=c d"`
+	Description string `json:"descricao" validate:"required,min=1,max=10"`
+}
+
+func validateCreateTransaction(c *fiber.Ctx) error {
+	var body = new(createTransactionRequest)
+	err := c.BodyParser(&body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).Send(nil)
+	}
+
+	err = Validator.Struct(body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).Send(nil)
+	}
+	return c.Next()
 }
 
 func (r *TransactionRestHandler) CreateTransaction(c *fiber.Ctx) error {
 
 	userId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.Status(fiber.StatusBadRequest).Send(nil)
 	}
 
 	var req createTransactionRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.Status(fiber.StatusBadRequest).Send(nil)
 	}
 
 	result, err := r.srv.Create(c.Context(), service.CreateTransactionParams{
@@ -47,14 +64,7 @@ func (r *TransactionRestHandler) CreateTransaction(c *fiber.Ctx) error {
 		Description: req.Description,
 	})
 	if err != nil {
-		if errors.Is(err, service.ErrInsufficientLimit) {
-			return c.SendStatus(fiber.StatusUnprocessableEntity)
-		}
-		if errors.Is(err, service.ErrCustomerNotFound) {
-			return c.SendStatus(fiber.StatusNotFound)
-		}
-		log.Error().Err(err).Msg("Error creating transaction")
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return handleError(err, c)
 	}
 
 	return c.JSON(result)

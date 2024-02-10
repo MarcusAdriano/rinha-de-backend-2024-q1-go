@@ -5,7 +5,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/service"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -28,7 +27,7 @@ func (r *StatementsRestHandler) GetStatements(c *fiber.Ctx) error {
 	userId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		log.Error().Err(err).Msg("Error parsing user id")
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.Status(fiber.StatusBadRequest).Send(nil)
 	}
 
 	statementsParams := service.GetStatementsParams{
@@ -37,13 +36,7 @@ func (r *StatementsRestHandler) GetStatements(c *fiber.Ctx) error {
 
 	statements, err := r.srv.GetStatements(ctx, statementsParams)
 	if err != nil {
-
-		if errors.Is(err, service.ErrCustomerNotFound) {
-			return c.SendStatus(fiber.StatusNotFound)
-		}
-
-		log.Error().Err(err).Msg("Error getting statements")
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return handleError(err, c)
 	}
 
 	return c.JSON(statements)

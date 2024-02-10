@@ -50,6 +50,8 @@ services:
       - rinhanet
     volumes:
       - ./sql/init/:/docker-entrypoint-initdb.d/
+      - ./sql/postgres.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
     deploy:
       resources:
         limits:

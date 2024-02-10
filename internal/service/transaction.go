@@ -11,14 +11,14 @@ import (
 
 type CreateTransactionParams struct {
 	UserId      int32
-	Value       int32
+	Value       int64
 	Type        TransactionType
 	Description string
 }
 
 type TransactionCreated struct {
-	Limit   int32 `json:"limite"`
-	Balance int32 `json:"balance"`
+	Limit   int64 `json:"limite"`
+	Balance int64 `json:"balance"`
 }
 
 type TransactionService interface {
@@ -43,7 +43,7 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 	}
 	defer tx.Rollback(ctx)
 
-	q := postgres.New(s.dbpool)
+	q := postgres.New(tx)
 	qtx := q.WithTx(tx)
 
 	if params.Type == Debit {
@@ -61,7 +61,7 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 		return nil, err
 	}
 	if params.Type == Debit && u.Balance < u.BalanceLimit*-1 {
-		return nil, ErrInsufficientLimit
+		return nil, ErrInsufficientBalance
 	}
 
 	query := postgres.CreateTransactionParams{

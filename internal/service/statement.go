@@ -20,9 +20,9 @@ const (
 )
 
 var (
-	ErrCustomerNotFound   error = errors.New("customer not found")
-	ErrInsufficientLimit  error = errors.New("insufficient limit")
-	ErrInvalidTransaction error = errors.New("invalid transaction")
+	ErrCustomerNotFound    error = errors.New("customer not found")
+	ErrInsufficientBalance error = errors.New("insufficient balance")
+	ErrInvalidTransaction  error = errors.New("invalid transaction")
 )
 
 type Statements struct {
@@ -31,13 +31,13 @@ type Statements struct {
 }
 
 type Balance struct {
-	Amount int32  `json:"total"`
+	Amount int64  `json:"total"`
 	Date   string `json:"data_extrato"`
-	Limit  int32  `json:"limite"`
+	Limit  int64  `json:"limite"`
 }
 
 type LastTransactions struct {
-	Value           int32           `json:"valor"`
+	Value           int64           `json:"valor"`
 	TransactionType TransactionType `json:"tipo"`
 	Description     string          `json:"descricao"`
 	CreateAt        string          `json:"realizado_em"`
@@ -57,9 +57,7 @@ type statementService struct {
 
 func (s *statementService) GetStatements(ctx context.Context, params GetStatementsParams) (*Statements, error) {
 
-	tx, err := s.dbpool.BeginTx(ctx, pgx.TxOptions{
-		IsoLevel: pgx.RepeatableRead,
-	})
+	tx, err := s.dbpool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		log.Err(err).Msg("Error starting transaction")
 		return nil, err
