@@ -3,8 +3,6 @@ services:
   api1: &api # API - Instância 01
     build: .
     hostname: api1
-    networks:
-      - rinhanet
     depends_on:
       - db
     environment:
@@ -28,8 +26,6 @@ services:
       - db
       - api1
       - api2
-    networks:
-      - rinhanet
     expose:
       - "9999"
     ports:
@@ -46,8 +42,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=mysecretpassword
       - POSTGRES_DB=rinhabackend
-    networks:
-      - rinhanet
     volumes:
       - ./sql/init/:/docker-entrypoint-initdb.d/
       - ./sql/postgres.conf:/etc/postgresql/postgresql.conf
@@ -59,5 +53,6 @@ services:
           memory: '250GB'
 
 networks:
-  rinhanet:
+  default:
     driver: bridge
+    name: rinha-net

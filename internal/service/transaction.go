@@ -18,7 +18,7 @@ type CreateTransactionParams struct {
 
 type TransactionCreated struct {
 	Limit   int64 `json:"limite"`
-	Balance int64 `json:"balance"`
+	Balance int64 `json:"saldo"`
 }
 
 type TransactionService interface {
@@ -26,12 +26,14 @@ type TransactionService interface {
 }
 
 type transactionService struct {
-	dbpool *pgxpool.Pool
+	dbpool  *pgxpool.Pool
+	queries *postgres.Queries
 }
 
-func NewTransactionService(dbpool *pgxpool.Pool) TransactionService {
+func NewTransactionService(dbpool *pgxpool.Pool, queries *postgres.Queries) TransactionService {
 	return &transactionService{
-		dbpool: dbpool,
+		dbpool:  dbpool,
+		queries: queries,
 	}
 }
 
@@ -43,8 +45,7 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 	}
 	defer tx.Rollback(ctx)
 
-	q := postgres.New(tx)
-	qtx := q.WithTx(tx)
+	qtx := s.queries.WithTx(tx)
 
 	if params.Type == Debit {
 		params.Value *= -1

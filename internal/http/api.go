@@ -62,8 +62,6 @@ func handleError(err error, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
 	case service.ErrCustomerNotFound:
 		return c.Status(fiber.StatusNotFound).Send(nil)
-	case service.ErrInvalidTransaction:
-		return c.Status(fiber.StatusBadRequest).Send(nil)
 	default:
 		log.Error().Err(err).Msg("Error creating transaction")
 		return c.Status(fiber.StatusInternalServerError).Send(nil)

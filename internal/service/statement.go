@@ -22,7 +22,6 @@ const (
 var (
 	ErrCustomerNotFound    error = errors.New("customer not found")
 	ErrInsufficientBalance error = errors.New("insufficient balance")
-	ErrInvalidTransaction  error = errors.New("invalid transaction")
 )
 
 type Statements struct {
@@ -52,20 +51,29 @@ type StatementService interface {
 }
 
 type statementService struct {
-	dbpool *pgxpool.Pool
+	dbpool  *pgxpool.Pool
+	queries *postgres.Queries
+}
+
+func NewStatementService(dbpool *pgxpool.Pool, queries *postgres.Queries) StatementService {
+	return &statementService{
+		dbpool:  dbpool,
+		queries: queries,
+	}
 }
 
 func (s *statementService) GetStatements(ctx context.Context, params GetStatementsParams) (*Statements, error) {
 
-	tx, err := s.dbpool.BeginTx(ctx, pgx.TxOptions{})
+	tx, err := s.dbpool.BeginTx(ctx, pgx.TxOptions{
+		IsoLevel: pgx.RepeatableRead,
+	})
 	if err != nil {
 		log.Err(err).Msg("Error starting transaction")
 		return nil, err
 	}
 	defer tx.Rollback(ctx)
 
-	q := postgres.New(s.dbpool)
-	qtx := q.WithTx(tx)
+	qtx := s.queries.WithTx(tx)
 
 	query := postgres.GetTransactionsByUserParams{
 		UserID: int32(params.UserId),
@@ -122,10 +130,4 @@ func (s *statementService) GetStatements(ctx context.Context, params GetStatemen
 		Balance:          balance,
 		LastTransactions: transactions,
 	}, nil
-}
-
-func NewStatementService(dbpool *pgxpool.Pool) StatementService {
-	return &statementService{
-		dbpool: dbpool,
-	}
 }
