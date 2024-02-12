@@ -5,7 +5,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE transactions (
-    id          UUID NOT NULL UNIQUE,
+    id          SERIAL UNIQUE,
     user_id     INTEGER NOT NULL,
     amount      BIGINT NOT NULL,
     description VARCHAR(10) NOT NULL,
@@ -13,4 +13,4 @@ CREATE TABLE transactions (
     ttype       CHAR(1) NOT NULL
 );
 
-CREATE INDEX transactions_user_id ON transactions (user_id) HASH DESC;
+CREATE INDEX ix_transactions_user_id ON transactions USING HASH (user_id);
