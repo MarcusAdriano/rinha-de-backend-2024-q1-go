@@ -5,7 +5,7 @@
 package postgres
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 type Transaction struct {
@@ -13,7 +13,7 @@ type Transaction struct {
 	UserID      int32
 	Amount      int64
 	Description string
-	CreatedAt   pgtype.Timestamp
+	CreatedAt   time.Time
 	Ttype       string
 }
 

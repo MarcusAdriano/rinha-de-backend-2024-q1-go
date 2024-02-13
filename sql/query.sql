@@ -12,8 +12,8 @@ WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2;
 
 -- name: CreateTransaction :exec
 INSERT INTO transactions 
-(user_id, description, amount, ttype) 
-VALUES ($1, $2, $3, $4);
+(user_id, description, amount, ttype, created_at) 
+VALUES ($1, $2, $3, $4, $5);
 
 -- name: UpdateUserBalance :one
 UPDATE users 

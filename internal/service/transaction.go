@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -47,12 +48,14 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 
 	qtx := s.queries.WithTx(tx)
 
+	var operationValue = params.Value
+
 	if params.Type == Debit {
-		params.Value *= -1
+		operationValue *= -1
 	}
 
 	u, err := qtx.UpdateUserBalance(ctx, postgres.UpdateUserBalanceParams{
-		Balance: params.Value,
+		Balance: operationValue,
 		ID:      params.UserId,
 	})
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -70,6 +73,7 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 		Amount:      params.Value,
 		Description: params.Description,
 		Ttype:       string(params.Type),
+		CreatedAt:   time.Now(),
 	}
 
 	err = qtx.CreateTransaction(ctx, query)

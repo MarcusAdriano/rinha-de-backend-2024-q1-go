@@ -96,7 +96,7 @@ func (s *statementService) GetStatements(ctx context.Context, params GetStatemen
 		transaction.Value = row.Amount
 		transaction.Description = row.Description
 
-		transaction.CreateAt = row.CreatedAt.Time.Format(DateFormat)
+		transaction.CreateAt = row.CreatedAt.Format(DateFormat)
 		transaction.TransactionType = TransactionType(row.Ttype)
 
 		transactions = append(transactions, transaction)

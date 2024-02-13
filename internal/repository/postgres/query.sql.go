@@ -7,14 +7,13 @@ package postgres
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 const createTransaction = `-- name: CreateTransaction :exec
 INSERT INTO transactions 
-(user_id, description, amount, ttype) 
-VALUES ($1, $2, $3, $4)
+(user_id, description, amount, ttype, created_at) 
+VALUES ($1, $2, $3, $4, $5)
 `
 
 type CreateTransactionParams struct {
@@ -22,6 +21,7 @@ type CreateTransactionParams struct {
 	Description string
 	Amount      int64
 	Ttype       string
+	CreatedAt   time.Time
 }
 
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) error {
@@ -30,6 +30,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		arg.Description,
 		arg.Amount,
 		arg.Ttype,
+		arg.CreatedAt,
 	)
 	return err
 }
@@ -52,7 +53,7 @@ type GetTransactionsByUserRow struct {
 	BalanceLimit int64
 	Description  string
 	Amount       int64
-	CreatedAt    pgtype.Timestamp
+	CreatedAt    time.Time
 	Ttype        string
 }
 
