@@ -22,7 +22,7 @@ func NewTransactionRestHandler(srv service.TransactionService) *TransactionRestH
 }
 
 func (r *TransactionRestHandler) Register(app *fiber.App) {
-	app.Post("/clientes/:id/transacoes", validateCreateTransaction, r.CreateTransaction)
+	app.Post("/clientes/:id/transacoes", createTransactionReqValidator, r.CreateTransaction)
 }
 
 type createTransactionRequest struct {
@@ -31,16 +31,16 @@ type createTransactionRequest struct {
 	Description string `json:"descricao" validate:"required,min=1,max=10"`
 }
 
-func validateCreateTransaction(c *fiber.Ctx) error {
+func createTransactionReqValidator(c *fiber.Ctx) error {
 	var body = new(createTransactionRequest)
 	err := c.BodyParser(&body)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).Send(nil)
+		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
 	}
 
 	err = Validator.Struct(body)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).Send(nil)
+		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
 	}
 	return c.Next()
 }
@@ -49,13 +49,11 @@ func (r *TransactionRestHandler) CreateTransaction(c *fiber.Ctx) error {
 
 	userId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).Send(nil)
+		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
 	}
 
 	var req createTransactionRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).Send(nil)
-	}
+	c.BodyParser(&req)
 
 	result, err := r.srv.Create(c.Context(), service.CreateTransactionParams{
 		UserId:      int32(userId),

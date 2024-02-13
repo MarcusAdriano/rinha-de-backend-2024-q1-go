@@ -27,7 +27,7 @@ func (r *StatementsRestHandler) GetStatements(c *fiber.Ctx) error {
 	userId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		log.Error().Err(err).Msg("Error parsing user id")
-		return c.Status(fiber.StatusBadRequest).Send(nil)
+		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
 	}
 
 	statementsParams := service.GetStatementsParams{

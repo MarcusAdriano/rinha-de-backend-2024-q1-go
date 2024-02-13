@@ -45,12 +45,12 @@ services:
     volumes:
       - ./sql/init/:/docker-entrypoint-initdb.d/
       - ./sql/postgres.conf:/etc/postgresql/postgresql.conf
-    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
     deploy:
       resources:
         limits:
           cpus: '0.5'
-          memory: '250GB'
+          memory: '250MB'
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
 
 networks:
   default:
