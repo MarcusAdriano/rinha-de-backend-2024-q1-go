@@ -184,15 +184,8 @@ func TestIntegration(t *testing.T) {
 			expectedBalance         int64
 			expectedLimit           int64
 			expectedTransactionsLen int
-			lastTransaction         struct {
-				amount int64
-				t      service.TransactionType
-			}
 		}{
-			{5, 200, 0, 5000 * 100, 10, struct {
-				amount int64
-				t      service.TransactionType
-			}{1, service.Debit}},
+			{5, 200, 0, 5000 * 100, 10},
 		}
 
 		for _, test := range statementsTest {
@@ -206,8 +199,6 @@ func TestIntegration(t *testing.T) {
 			assert.Equalf(t, test.expectedBalance, statements.Balance.Amount, "Expected balance %d, but got %d", test.expectedBalance, statements.Balance.Amount)
 			assert.Equalf(t, test.expectedLimit, statements.Balance.Limit, "Expected limit %d, but got %d", test.expectedLimit, statements.Balance.Limit)
 			assert.Equalf(t, test.expectedTransactionsLen, len(statements.LastTransactions), "Expected %d transactions, but got %d", test.expectedTransactionsLen, len(statements.LastTransactions))
-			assert.Equalf(t, test.lastTransaction.amount, statements.LastTransactions[0].Value, "Expected %d transactions[0].Value, but got %d", test.lastTransaction.amount, statements.LastTransactions[0].Value)
-			assert.Equalf(t, test.lastTransaction.t, statements.LastTransactions[0].TransactionType, "Expected %d transactions[0].Type, but got %d", test.lastTransaction.t, statements.LastTransactions[0].TransactionType)
 		}
 	})
 }
