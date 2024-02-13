@@ -25,8 +25,8 @@ var (
 )
 
 type Statements struct {
-	Balance          Balance            `json:"saldo"`
-	LastTransactions []LastTransactions `json:"ultimas_transacoes"`
+	Balance          Balance       `json:"saldo"`
+	LastTransactions []Transaction `json:"ultimas_transacoes"`
 }
 
 type Balance struct {
@@ -35,7 +35,7 @@ type Balance struct {
 	Limit  int64  `json:"limite"`
 }
 
-type LastTransactions struct {
+type Transaction struct {
 	Value           int64           `json:"valor"`
 	TransactionType TransactionType `json:"tipo"`
 	Description     string          `json:"descricao"`
@@ -71,8 +71,16 @@ func (s *statementService) GetStatements(ctx context.Context, params GetStatemen
 	}
 	defer tx.Rollback(ctx)
 
-	queries := s.dbconn.New()
+	queries := s.dbconn.GetQueries()
 	qtx := queries.WithTx(tx)
+
+	user, err := qtx.GetUser(ctx, int32(params.UserId))
+	if err != nil {
+		if repository.IsErrNoRows(err) {
+			return nil, ErrCustomerNotFound
+		}
+		return nil, err
+	}
 
 	query := postgres.GetTransactionsByUserParams{
 		UserID: int32(params.UserId),
@@ -85,12 +93,12 @@ func (s *statementService) GetStatements(ctx context.Context, params GetStatemen
 		return nil, err
 	}
 
-	transactions := make([]LastTransactions, 0)
+	transactions := make([]Transaction, 0)
 	var balance Balance
 	balance.Date = time.Now().Format(DateFormat)
 
 	for _, row := range rows {
-		var transaction LastTransactions
+		var transaction Transaction
 
 		transaction.Value = row.Amount
 		transaction.Description = row.Description
@@ -101,23 +109,9 @@ func (s *statementService) GetStatements(ctx context.Context, params GetStatemen
 		transactions = append(transactions, transaction)
 	}
 
-	if len(rows) == 0 {
-
-		u, err := qtx.GetUser(ctx, int32(params.UserId))
-		if repository.IsErrNoRows(err) {
-			return nil, ErrCustomerNotFound
-		}
-		if err != nil {
-			log.Err(err).Msg("Error getting user")
-			return nil, err
-		}
-
-		balance.Amount = u.Balance
-		balance.Limit = u.BalanceLimit
-	} else {
-		balance.Amount = rows[0].Balance
-		balance.Limit = rows[0].BalanceLimit
-	}
+	balance.Amount = user.Balance
+	balance.Limit = user.BalanceLimit
+	balance.Date = time.Now().Format(DateFormat)
 
 	err = tx.Commit(ctx)
 	if err != nil {

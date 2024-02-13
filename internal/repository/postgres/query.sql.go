@@ -35,10 +35,8 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 }
 
 const getTransactionsByUser = `-- name: GetTransactionsByUser :many
-SELECT u.balance, u.balance_limit, t.description,
-        t.amount, t.created_at, t.ttype
+SELECT t.description, t.amount, t.created_at, t.ttype
 FROM transactions t
-INNER JOIN users u ON t.user_id = u.id
 WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2
 `
 
@@ -48,12 +46,10 @@ type GetTransactionsByUserParams struct {
 }
 
 type GetTransactionsByUserRow struct {
-	Balance      int64
-	BalanceLimit int64
-	Description  string
-	Amount       int64
-	CreatedAt    pgtype.Timestamp
-	Ttype        string
+	Description string
+	Amount      int64
+	CreatedAt   pgtype.Timestamp
+	Ttype       string
 }
 
 func (q *Queries) GetTransactionsByUser(ctx context.Context, arg GetTransactionsByUserParams) ([]GetTransactionsByUserRow, error) {
@@ -66,8 +62,6 @@ func (q *Queries) GetTransactionsByUser(ctx context.Context, arg GetTransactions
 	for rows.Next() {
 		var i GetTransactionsByUserRow
 		if err := rows.Scan(
-			&i.Balance,
-			&i.BalanceLimit,
 			&i.Description,
 			&i.Amount,
 			&i.CreatedAt,

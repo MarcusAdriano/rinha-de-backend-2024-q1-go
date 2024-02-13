@@ -4,10 +4,8 @@ FROM users
 WHERE id = $1;
 
 -- name: GetTransactionsByUser :many
-SELECT u.balance, u.balance_limit, t.description,
-        t.amount, t.created_at, t.ttype
+SELECT t.description, t.amount, t.created_at, t.ttype
 FROM transactions t
-INNER JOIN users u ON t.user_id = u.id
 WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2;
 
 -- name: CreateTransaction :exec

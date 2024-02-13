@@ -36,12 +36,17 @@ func createDatabaseConnection(connectionString string) *repository.SqlcDatabaseC
 		panic(err)
 	}
 
+	hostname, _ := os.Hostname()
+	appName := "rinha-api-" + hostname
+
 	config.ConnConfig.Config.ConnectTimeout = time.Second * 1
+	config.ConnConfig.RuntimeParams["application_name"] = appName
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		log.Error().Msgf("Error connecting to database: %v", err)
 		panic(err)
 	}
+
 	return repository.NewSqlcDatabaseConnection(pool)
 }
 

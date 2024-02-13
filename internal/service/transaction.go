@@ -41,7 +41,7 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 	}
 	defer tx.Rollback(ctx)
 
-	queries := s.dbconn.New()
+	queries := s.dbconn.GetQueries()
 	qtx := queries.WithTx(tx)
 
 	var operationValue = params.Value
