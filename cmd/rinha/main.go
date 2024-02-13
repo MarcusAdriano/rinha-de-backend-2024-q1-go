@@ -1,34 +1,43 @@
 package main
 
 import (
+	"context"
 	"os"
+	"time"
 
-	"github.com/gofiber/contrib/fiberzerolog"
-	"github.com/gofiber/fiber/v2"
-	"github.com/rs/zerolog"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/http"
+	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository/postgres"
+	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/service"
 	"github.com/rs/zerolog/log"
 )
 
 func main() {
 
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	app := http.NewRestApp()
 
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).
-		With().
-		Timestamp().
-		Logger()
+	config, err := pgxpool.ParseConfig(os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Error().Msgf("Error connecting to database: %v", err)
+		panic(err)
+	}
 
-	app := fiber.New()
-	app.Use(fiberzerolog.New(
-		fiberzerolog.Config{
-			Logger: &log.Logger,
-		},
-	))
+	config.ConnConfig.Config.ConnectTimeout = time.Second * 2
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
+	if err != nil {
+		log.Error().Msgf("Error connecting to database: %v", err)
+		panic(err)
+	}
+	defer pool.Close()
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, rinha de backend 2024 q1")
-	})
+	queries := postgres.New(pool)
+	srvStatement := service.NewStatementService(pool, queries)
+	srvTransaction := service.NewTransactionService(pool, queries)
 
-	log.Fatal().Err(app.Listen(":3000"))
+	app.RegisterHandler(
+		http.NewStatementRestHandler(srvStatement),
+		http.NewTransactionRestHandler(srvTransaction),
+	)
+
+	app.Run()
 }

@@ -19,6 +19,8 @@ WORKDIR /
 
 COPY --from=build-stage /app/bin/rinha /rinha
 
+ENV TZ="America/Sao_Paulo"
+
 EXPOSE 8080
 
 USER nonroot:nonroot
