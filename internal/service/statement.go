@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository/postgres"
 	"github.com/rs/zerolog/log"
@@ -62,9 +61,7 @@ func NewStatementService(conn *repository.SqlcDatabaseConnection) StatementServi
 
 func (s *statementService) GetStatements(ctx context.Context, params GetStatementsParams) (*Statements, error) {
 
-	tx, err := s.dbconn.GetConn().BeginTx(ctx, pgx.TxOptions{
-		IsoLevel: pgx.RepeatableRead,
-	})
+	tx, err := s.dbconn.GetConn().Begin(ctx)
 	if err != nil {
 		log.Err(err).Msg("Error starting transaction")
 		return nil, err

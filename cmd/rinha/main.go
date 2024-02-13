@@ -37,7 +37,7 @@ func createDatabaseConnection(connectionString string) *repository.SqlcDatabaseC
 	}
 
 	hostname, _ := os.Hostname()
-	appName := "rinha-api-" + hostname
+	appName := "rinha-" + hostname
 
 	config.ConnConfig.Config.ConnectTimeout = time.Second * 1
 	config.ConnConfig.RuntimeParams["application_name"] = appName
