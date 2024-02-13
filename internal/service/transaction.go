@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -31,10 +30,9 @@ type transactionService struct {
 	queries *postgres.Queries
 }
 
-func NewTransactionService(dbpool *pgxpool.Pool, queries *postgres.Queries) TransactionService {
+func NewTransactionService(dbpool *pgxpool.Pool) TransactionService {
 	return &transactionService{
-		dbpool:  dbpool,
-		queries: queries,
+		dbpool: dbpool,
 	}
 }
 
@@ -46,7 +44,8 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 	}
 	defer tx.Rollback(ctx)
 
-	qtx := s.queries.WithTx(tx)
+	queries := postgres.New(s.dbpool)
+	qtx := queries.WithTx(tx)
 
 	var operationValue = params.Value
 
@@ -73,7 +72,6 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 		Amount:      params.Value,
 		Description: params.Description,
 		Ttype:       string(params.Type),
-		CreatedAt:   time.Now(),
 	}
 
 	err = qtx.CreateTransaction(ctx, query)

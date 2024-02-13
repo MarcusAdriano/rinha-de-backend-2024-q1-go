@@ -12,7 +12,7 @@ services:
       resources:
         limits:
           cpus: '0.25'
-          memory: '25MB'
+          memory: '75MB'
 
   api2: # API - Instância 02
     <<: *api
@@ -34,7 +34,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: '250MB'
+          memory: '200MB'
 
   db: # Banco de dados
     image: postgres:16.1
@@ -49,7 +49,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: '250MB'
+          memory: '200MB'
     command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
 
 networks:

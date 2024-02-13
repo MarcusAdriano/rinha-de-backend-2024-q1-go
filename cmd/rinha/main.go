@@ -7,7 +7,6 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/http"
-	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository/postgres"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/service"
 	"github.com/rs/zerolog/log"
 )
@@ -30,9 +29,8 @@ func main() {
 	}
 	defer pool.Close()
 
-	queries := postgres.New(pool)
-	srvStatement := service.NewStatementService(pool, queries)
-	srvTransaction := service.NewTransactionService(pool, queries)
+	srvStatement := service.NewStatementService(pool)
+	srvTransaction := service.NewTransactionService(pool)
 
 	app.RegisterHandler(
 		http.NewStatementRestHandler(srvStatement),

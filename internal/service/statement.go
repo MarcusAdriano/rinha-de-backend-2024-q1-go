@@ -52,13 +52,11 @@ type StatementService interface {
 
 type statementService struct {
 	dbpool  *pgxpool.Pool
-	queries *postgres.Queries
 }
 
-func NewStatementService(dbpool *pgxpool.Pool, queries *postgres.Queries) StatementService {
+func NewStatementService(dbpool *pgxpool.Pool) StatementService {
 	return &statementService{
 		dbpool:  dbpool,
-		queries: queries,
 	}
 }
 
@@ -73,7 +71,8 @@ func (s *statementService) GetStatements(ctx context.Context, params GetStatemen
 	}
 	defer tx.Rollback(ctx)
 
-	qtx := s.queries.WithTx(tx)
+	queries := postgres.New(s.dbpool)
+	qtx := queries.WithTx(tx)
 
 	query := postgres.GetTransactionsByUserParams{
 		UserID: int32(params.UserId),
@@ -96,7 +95,7 @@ func (s *statementService) GetStatements(ctx context.Context, params GetStatemen
 		transaction.Value = row.Amount
 		transaction.Description = row.Description
 
-		transaction.CreateAt = row.CreatedAt.Format(DateFormat)
+		transaction.CreateAt = row.CreatedAt.Time.Format(DateFormat)
 		transaction.TransactionType = TransactionType(row.Ttype)
 
 		transactions = append(transactions, transaction)
