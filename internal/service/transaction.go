@@ -2,10 +2,8 @@ package service
 
 import (
 	"context"
-	"errors"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository/postgres"
 )
 
@@ -26,25 +24,24 @@ type TransactionService interface {
 }
 
 type transactionService struct {
-	dbpool  *pgxpool.Pool
-	queries *postgres.Queries
+	dbconn *repository.SqlcDatabaseConnection
 }
 
-func NewTransactionService(dbpool *pgxpool.Pool) TransactionService {
+func NewTransactionService(conn *repository.SqlcDatabaseConnection) TransactionService {
 	return &transactionService{
-		dbpool: dbpool,
+		dbconn: conn,
 	}
 }
 
 func (s *transactionService) Create(ctx context.Context, params CreateTransactionParams) (*TransactionCreated, error) {
 
-	tx, err := s.dbpool.Begin(ctx)
+	tx, err := s.dbconn.GetConn().Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback(ctx)
 
-	queries := postgres.New(s.dbpool)
+	queries := s.dbconn.New()
 	qtx := queries.WithTx(tx)
 
 	var operationValue = params.Value
@@ -57,13 +54,13 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 		Balance: operationValue,
 		ID:      params.UserId,
 	})
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, ErrCustomerNotFound
-	}
 	if err != nil {
+		if repository.IsErrNoRows(err) {
+			return nil, ErrCustomerNotFound
+		}
 		return nil, err
 	}
-	if params.Type == Debit && u.Balance < u.BalanceLimit*-1 {
+	if params.Type == Debit && u.Balance+u.BalanceLimit < 0 {
 		return nil, ErrInsufficientBalance
 	}
 

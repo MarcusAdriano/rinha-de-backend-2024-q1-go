@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository/postgres"
 	"github.com/rs/zerolog/log"
 )
@@ -51,18 +51,18 @@ type StatementService interface {
 }
 
 type statementService struct {
-	dbpool  *pgxpool.Pool
+	dbconn *repository.SqlcDatabaseConnection
 }
 
-func NewStatementService(dbpool *pgxpool.Pool) StatementService {
+func NewStatementService(conn *repository.SqlcDatabaseConnection) StatementService {
 	return &statementService{
-		dbpool:  dbpool,
+		dbconn: conn,
 	}
 }
 
 func (s *statementService) GetStatements(ctx context.Context, params GetStatementsParams) (*Statements, error) {
 
-	tx, err := s.dbpool.BeginTx(ctx, pgx.TxOptions{
+	tx, err := s.dbconn.GetConn().BeginTx(ctx, pgx.TxOptions{
 		IsoLevel: pgx.RepeatableRead,
 	})
 	if err != nil {
@@ -71,7 +71,7 @@ func (s *statementService) GetStatements(ctx context.Context, params GetStatemen
 	}
 	defer tx.Rollback(ctx)
 
-	queries := postgres.New(s.dbpool)
+	queries := s.dbconn.New()
 	qtx := queries.WithTx(tx)
 
 	query := postgres.GetTransactionsByUserParams{
@@ -104,7 +104,7 @@ func (s *statementService) GetStatements(ctx context.Context, params GetStatemen
 	if len(rows) == 0 {
 
 		u, err := qtx.GetUser(ctx, int32(params.UserId))
-		if err == pgx.ErrNoRows {
+		if repository.IsErrNoRows(err) {
 			return nil, ErrCustomerNotFound
 		}
 		if err != nil {

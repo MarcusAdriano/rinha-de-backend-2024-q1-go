@@ -24,6 +24,10 @@ func (r *RestApp) RegisterHandler(handler ...RestHandler) {
 	}
 }
 
+func (r *RestApp) GetApp() *fiber.App {
+	return r.app
+}
+
 func (r *RestApp) Run() {
 
 	port := os.Getenv("SERVER_PORT")
