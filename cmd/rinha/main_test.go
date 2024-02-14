@@ -111,6 +111,7 @@ func TestIntegration(t *testing.T) {
 			{1, 422, 0, 1, "e", ""},
 			{1, 422, 0, 1, "c", "12345678901"},
 			{6, 404, 0, 1, "c", "t"},
+			{2, 422, 0, 80001, "d", "t"},
 		}
 
 		for _, test := range tests {
