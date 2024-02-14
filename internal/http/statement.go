@@ -5,7 +5,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/service"
-	"github.com/rs/zerolog/log"
 )
 
 type StatementsRestHandler struct {
@@ -18,17 +17,21 @@ func NewStatementRestHandler(srv service.StatementService) *StatementsRestHandle
 }
 
 func (r *StatementsRestHandler) Register(app *fiber.App) {
-	app.Get("/clientes/:id/extrato", r.GetStatements)
+	app.Get("/clientes/:id/extrato", validateGetStatements, r.GetStatements)
+}
+
+func validateGetStatements(c *fiber.Ctx) error {
+	userId := c.Params("id")
+	if _, err := strconv.Atoi(userId); err != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
+	}
+	return c.Next()
 }
 
 func (r *StatementsRestHandler) GetStatements(c *fiber.Ctx) error {
 
 	ctx := c.Context()
-	userId, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		log.Error().Err(err).Msg("Error parsing user id")
-		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
-	}
+	userId, _ := strconv.Atoi(c.Params("id"))
 
 	statementsParams := service.GetStatementsParams{
 		UserId: userId,
@@ -36,7 +39,7 @@ func (r *StatementsRestHandler) GetStatements(c *fiber.Ctx) error {
 
 	statements, err := r.srv.GetStatements(ctx, statementsParams)
 	if err != nil {
-		return handleError(err, c)
+		return globalErrorHandler(err, c)
 	}
 
 	return c.JSON(statements)

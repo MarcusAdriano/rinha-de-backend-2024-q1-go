@@ -67,19 +67,20 @@ func TestIntegration(t *testing.T) {
 	app := createApp()
 
 	t.Run("Initial Statement Test", func(t *testing.T) {
-		statementUrl := "/clientes/%d/extrato"
+		statementUrl := "/clientes/%s/extrato"
 		tests := []struct {
-			id                 int
+			id                 string
 			expectedStatusCode int
 			expectedBalance    int64
 			expectedLimit      int64
 		}{
-			{1, 200, 0, 1000 * 100},
-			{2, 200, 0, 800 * 100},
-			{3, 200, 0, 10000 * 100},
-			{4, 200, 0, 100000 * 100},
-			{5, 200, 0, 5000 * 100},
-			{6, 404, 0, 0},
+			{"1", 200, 0, 1000 * 100},
+			{"2", 200, 0, 800 * 100},
+			{"3", 200, 0, 10000 * 100},
+			{"4", 200, 0, 100000 * 100},
+			{"5", 200, 0, 5000 * 100},
+			{"6", 404, 0, 0},
+			{"invalidId", 422, 0, 0},
 		}
 
 		for _, test := range tests {
@@ -96,22 +97,23 @@ func TestIntegration(t *testing.T) {
 	})
 
 	t.Run("Transaction Test", func(t *testing.T) {
-		transationUrl := "/clientes/%d/transacoes"
+		transationUrl := "/clientes/%s/transacoes"
 		tests := []struct {
-			id                 int
+			id                 string
 			expectedStatusCode int
 			expectedBalance    int64
 			transactionValue   int64
 			transactionType    string
 			transactionDesc    string
 		}{
-			{1, 200, 1, 1, "c", "teste"},
-			{1, 200, 0, 1, "d", "teste"},
-			{1, 422, 0, 1, "e", "teste"},
-			{1, 422, 0, 1, "e", ""},
-			{1, 422, 0, 1, "c", "12345678901"},
-			{6, 404, 0, 1, "c", "t"},
-			{2, 422, 0, 80001, "d", "t"},
+			{"1", 200, 1, 1, "c", "teste"},
+			{"1", 200, 0, 1, "d", "teste"},
+			{"1", 422, 0, 1, "e", "teste"},
+			{"1", 422, 0, 1, "e", ""},
+			{"1", 422, 0, 1, "c", "12345678901"},
+			{"6", 404, 0, 1, "c", "t"},
+			{"2", 422, 0, 80001, "d", "t"},
+			{"invalidId", 422, 0, 0, "", ""},
 		}
 
 		for _, test := range tests {
@@ -136,10 +138,10 @@ func TestIntegration(t *testing.T) {
 	})
 
 	t.Run("Transaction Simple (very simple) Race test", func(t *testing.T) {
-		transationUrl := "/clientes/%d/transacoes"
+		transationUrl := "/clientes/%s/transacoes"
 
 		type testCase struct {
-			id                 int
+			id                 string
 			expectedStatusCode int
 			transactionValue   int64
 			transactionType    string
@@ -147,11 +149,9 @@ func TestIntegration(t *testing.T) {
 		}
 
 		tests := []testCase{
-			{5, 200, 1, "c", "teste"},
-			{5, 200, 1, "d", "teste"},
+			{"5", 200, 1, "c", "teste"},
+			{"5", 200, 1, "d", "teste"},
 		}
-
-		// Run the tests in parallel
 
 		for i := 0; i < 20; i++ {
 			for _, test := range tests {

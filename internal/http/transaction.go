@@ -42,15 +42,18 @@ func createTransactionReqValidator(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
 	}
+
+	_, err = strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
+	}
+
 	return c.Next()
 }
 
 func (r *TransactionRestHandler) CreateTransaction(c *fiber.Ctx) error {
 
-	userId, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
-	}
+	userId, _ := strconv.Atoi(c.Params("id"))
 
 	var req createTransactionRequest
 	c.BodyParser(&req)
@@ -62,7 +65,7 @@ func (r *TransactionRestHandler) CreateTransaction(c *fiber.Ctx) error {
 		Description: req.Description,
 	})
 	if err != nil {
-		return handleError(err, c)
+		return globalErrorHandler(err, c)
 	}
 
 	return c.JSON(result)

@@ -19,6 +19,10 @@ swagger:
 	swag init -g internal/http/api.go
 	swag fmt
 
+docker-push: docker-build
+	@echo "Publishing docker image..."
+	docker push marcusadriano/rinha-de-backend-2024-q1-go:latest
+
 docker-build:
 	@echo "Building docker image..."
 	docker build -t marcusadriano/rinha-de-backend-2024-q1-go:latest .
