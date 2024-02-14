@@ -10,3 +10,8 @@ Lang: Golang 1.21
 - Nginx
 - Fiber
 - Postgres
+
+### Variáveis de ambiente
+
+- `SERVER_PORT` - Porta que a aplicação irá rodar;
+- `DATABASE_URL` - Host do banco de dados (postgres);
