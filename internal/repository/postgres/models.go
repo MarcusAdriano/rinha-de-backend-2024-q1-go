@@ -9,6 +9,7 @@ import (
 )
 
 type Transaction struct {
+	ID          pgtype.UUID
 	UserID      int32
 	Amount      int64
 	Description string

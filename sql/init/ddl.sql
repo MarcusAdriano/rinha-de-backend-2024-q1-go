@@ -5,9 +5,10 @@ CREATE TABLE users (
 );
 
 CREATE TABLE transactions (
-    user_id     INTEGER NOT NULL,
-    amount      BIGINT NOT NULL,
-    description VARCHAR(10) NOT NULL,
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ttype       CHAR(1) NOT NULL
+  id          UUID PRIMARY KEY DEFAULT GEN_RANDOM_UUID(),
+  user_id     INTEGER NOT NULL,
+  amount      BIGINT NOT NULL,
+  description VARCHAR(10) NOT NULL,
+  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ttype       CHAR(1) NOT NULL
 );
