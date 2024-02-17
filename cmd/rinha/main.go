@@ -22,6 +22,7 @@ func createApp() *http.RestApp {
 	srvTransaction := service.NewTransactionService(dbconn)
 
 	app.RegisterHandler(
+		http.NewBalanceRestHandler(dbconn),
 		http.NewStatementRestHandler(srvStatement),
 		http.NewTransactionRestHandler(srvTransaction),
 	)

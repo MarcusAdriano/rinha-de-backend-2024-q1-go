@@ -34,6 +34,65 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 	return err
 }
 
+const getAllBalance = `-- name: GetAllBalance :many
+SELECT
+	u.id as user_id,
+	u.name as user_name,
+	u.balance_limit as limit,
+	u.balance as balance,
+	SUM(
+		CASE WHEN t.ttype = 'c'
+			THEN t.amount
+		ELSE t.amount * -1
+		END
+	) AS sum_transactions,
+	count(*) as transactions
+FROM users u
+	INNER JOIN transactions t
+	ON u.id = t.user_id
+GROUP BY
+	u.id,
+	u.balance_limit,
+	u.balance
+ORDER BY u.id
+`
+
+type GetAllBalanceRow struct {
+	UserID          int32
+	UserName        string
+	Limit           int64
+	Balance         int64
+	SumTransactions int64
+	Transactions    int64
+}
+
+func (q *Queries) GetAllBalance(ctx context.Context) ([]GetAllBalanceRow, error) {
+	rows, err := q.db.Query(ctx, getAllBalance)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllBalanceRow
+	for rows.Next() {
+		var i GetAllBalanceRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.UserName,
+			&i.Limit,
+			&i.Balance,
+			&i.SumTransactions,
+			&i.Transactions,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTransactionsByUser = `-- name: GetTransactionsByUser :many
 SELECT t.description, t.amount, t.created_at, t.ttype
 FROM transactions t
@@ -83,9 +142,15 @@ FROM users
 WHERE id = $1
 `
 
-func (q *Queries) GetUser(ctx context.Context, id int32) (User, error) {
+type GetUserRow struct {
+	ID           int32
+	Balance      int64
+	BalanceLimit int64
+}
+
+func (q *Queries) GetUser(ctx context.Context, id int32) (GetUserRow, error) {
 	row := q.db.QueryRow(ctx, getUser, id)
-	var i User
+	var i GetUserRow
 	err := row.Scan(&i.ID, &i.Balance, &i.BalanceLimit)
 	return i, err
 }
