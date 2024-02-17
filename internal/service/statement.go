@@ -47,15 +47,7 @@ func NewStatementService(conn *repository.SqlcDatabaseConnection) StatementServi
 
 func (s *statementService) GetStatements(ctx context.Context, params GetStatementsParams) (*Statements, error) {
 
-	tx, err := s.dbconn.GetConn().Begin(ctx)
-	if err != nil {
-		log.Err(err).Msg("Error starting transaction")
-		return nil, err
-	}
-	defer tx.Rollback(ctx)
-
-	queries := s.dbconn.GetQueries()
-	qtx := queries.WithTx(tx)
+	qtx := s.dbconn.GetQueries()
 
 	user, err := qtx.GetUser(ctx, int32(params.UserId))
 	if err != nil {
@@ -95,12 +87,6 @@ func (s *statementService) GetStatements(ctx context.Context, params GetStatemen
 	balance.Amount = user.Balance
 	balance.Limit = user.BalanceLimit
 	balance.Date = time.Now().Format(DateFormat)
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		log.Err(err).Msg("Error commiting transaction")
-		return nil, err
-	}
 
 	return &Statements{
 		Balance:          balance,
