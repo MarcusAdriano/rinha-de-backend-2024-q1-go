@@ -2,25 +2,11 @@ package service
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository/postgres"
 	"github.com/rs/zerolog/log"
-)
-
-type TransactionType string
-
-const (
-	Debit      TransactionType = "d"
-	Credit     TransactionType = "c"
-	DateFormat                 = "2006-01-02T15:04:05-0700"
-)
-
-var (
-	ErrCustomerNotFound    error = errors.New("customer not found")
-	ErrInsufficientBalance error = errors.New("insufficient balance")
 )
 
 type Statements struct {

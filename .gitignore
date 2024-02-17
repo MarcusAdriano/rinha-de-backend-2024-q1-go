@@ -25,3 +25,4 @@ go.work
 # IDE
 .idea/
 .vscode/
+cmd/rinha/__debug**
