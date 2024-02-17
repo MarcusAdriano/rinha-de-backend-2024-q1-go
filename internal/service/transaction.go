@@ -44,6 +44,43 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 	queries := s.dbconn.GetQueries()
 	qtx := queries.WithTx(tx)
 
+	err = createTransaction(params, qtx, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := updateUserBalance(params, qtx, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &TransactionCreated{
+		Limit:   u.BalanceLimit,
+		Balance: u.Balance,
+	}, nil
+}
+
+func createTransaction(params CreateTransactionParams, qtx *postgres.Queries, ctx context.Context) error {
+	query := postgres.CreateTransactionParams{
+		UserID:      params.UserId,
+		Amount:      params.Value,
+		Description: params.Description,
+		Ttype:       string(params.Type),
+	}
+
+	err := qtx.CreateTransaction(ctx, query)
+	if err != nil && repository.IsConstraintViolation(err) {
+		return ErrCustomerNotFound
+	}
+	return err
+
+}
+
+func updateUserBalance(params CreateTransactionParams, qtx *postgres.Queries, ctx context.Context) (*postgres.UpdateUserBalanceRow, error) {
 	var operationValue = params.Value
 
 	if params.Type == Debit {
@@ -63,25 +100,5 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 	if params.Type == Debit && u.Balance+u.BalanceLimit < 0 {
 		return nil, ErrInsufficientBalance
 	}
-
-	query := postgres.CreateTransactionParams{
-		UserID:      params.UserId,
-		Amount:      params.Value,
-		Description: params.Description,
-		Ttype:       string(params.Type),
-	}
-
-	err = qtx.CreateTransaction(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &TransactionCreated{
-		Limit:   u.BalanceLimit,
-		Balance: u.Balance,
-	}, nil
+	return &u, nil
 }
