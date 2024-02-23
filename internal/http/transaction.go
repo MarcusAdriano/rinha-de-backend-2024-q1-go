@@ -38,6 +38,10 @@ func createTransactionReqValidator(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
 	}
 
+	if body.Amount <= 0 {
+		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
+	}
+
 	err = Validator.Struct(body)
 	if err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
