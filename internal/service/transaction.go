@@ -44,12 +44,12 @@ func (s *transactionService) Create(ctx context.Context, params CreateTransactio
 	queries := s.dbconn.GetQueries()
 	qtx := queries.WithTx(tx)
 
-	err = createTransaction(params, qtx, ctx)
+	u, err := updateUserBalance(params, qtx, ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	u, err := updateUserBalance(params, qtx, ctx)
+	err = createTransaction(params, qtx, ctx)
 	if err != nil {
 		return nil, err
 	}
