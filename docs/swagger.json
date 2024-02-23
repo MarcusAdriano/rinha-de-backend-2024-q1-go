@@ -1,0 +1,203 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Servidor Web \"Rinha de Backend 2 - Concorrencia\".",
+        "title": "Rinha Backend API - Concorrencia",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "https://github.com/marcusadriano",
+            "email": "marcusadriano.pereira@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "0.0.2"
+    },
+    "host": "localhost:8080",
+    "paths": {
+        "/clientes/{id}/extrato": {
+            "get": {
+                "description": "Extrato",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clientes"
+                ],
+                "summary": "Obtem o extrato com as 10 ultimas transacoes e o saldo atual.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do usuario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.Statements"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/clientes/{id}/transacoes": {
+            "post": {
+                "description": "Eh necessario informacao do valor, tipo (debito ou credito) e descricao.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clientes"
+                ],
+                "summary": "Criar uma nova transacao para o usuario.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do usuario",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Transacao",
+                        "name": "transacao",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.createTransactionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.TransactionCreated"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "http.createTransactionRequest": {
+            "type": "object",
+            "required": [
+                "descricao",
+                "tipo",
+                "valor"
+            ],
+            "properties": {
+                "descricao": {
+                    "type": "string",
+                    "maxLength": 10,
+                    "minLength": 1
+                },
+                "tipo": {
+                    "type": "string",
+                    "enum": [
+                        "c",
+                        "d"
+                    ]
+                },
+                "valor": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.Balance": {
+            "type": "object",
+            "properties": {
+                "data_extrato": {
+                    "type": "string"
+                },
+                "limite": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.Statements": {
+            "type": "object",
+            "properties": {
+                "saldo": {
+                    "$ref": "#/definitions/service.Balance"
+                },
+                "ultimas_transacoes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.Transaction"
+                    }
+                }
+            }
+        },
+        "service.Transaction": {
+            "type": "object",
+            "properties": {
+                "descricao": {
+                    "type": "string"
+                },
+                "realizado_em": {
+                    "type": "string"
+                },
+                "tipo": {
+                    "$ref": "#/definitions/service.TransactionType"
+                },
+                "valor": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.TransactionCreated": {
+            "type": "object",
+            "properties": {
+                "limite": {
+                    "type": "integer"
+                },
+                "saldo": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.TransactionType": {
+            "type": "string",
+            "enum": [
+                "d",
+                "c"
+            ],
+            "x-enum-varnames": [
+                "Debit",
+                "Credit"
+            ]
+        }
+    }
+}

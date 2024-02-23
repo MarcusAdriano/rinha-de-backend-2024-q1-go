@@ -28,6 +28,18 @@ func validateGetStatements(c *fiber.Ctx) error {
 	return c.Next()
 }
 
+// GetStatements godoc
+//
+//	@Summary		Obtem o extrato com as 10 ultimas transacoes e o saldo atual.
+//	@Description	Extrato
+//	@Tags			clientes
+//	@Produce		json
+//
+//	@Param			id	path		int	true	"ID do usuario"
+//
+//	@Success		200	{object}	service.Statements
+//	@Failure		404	{object}	string
+//	@Router			/clientes/{id}/extrato [get]
 func (r *StatementsRestHandler) GetStatements(c *fiber.Ctx) error {
 
 	ctx := c.Context()
