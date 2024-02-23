@@ -38,6 +38,10 @@ func createTransactionReqValidator(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
 	}
 
+	if body.Amount <= 0 {
+		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
+	}
+
 	err = Validator.Struct(body)
 	if err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).Send(nil)
@@ -51,6 +55,21 @@ func createTransactionReqValidator(c *fiber.Ctx) error {
 	return c.Next()
 }
 
+// CreateTransaction godoc
+//
+//	@Summary		Criar uma nova transacao para o usuario.
+//	@Description	Eh necessario informacao do valor, tipo (debito ou credito) e descricao.
+//	@Tags			clientes
+//	@Accept			json
+//	@Produce		json
+//
+//	@Param			id			path		int							true	"ID do usuario"
+//
+//	@Param			transacao	body		createTransactionRequest	true	"Transacao"
+//	@Success		200			{object}	service.TransactionCreated
+//	@Failure		404			{object}	string
+//	@Failure		422			{object}	string
+//	@Router			/clientes/{id}/transacoes [post]
 func (r *TransactionRestHandler) CreateTransaction(c *fiber.Ctx) error {
 
 	userId, _ := strconv.Atoi(c.Params("id"))

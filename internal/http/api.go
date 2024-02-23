@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/contrib/fiberzerolog"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -21,12 +22,28 @@ func (r *RestApp) RegisterHandler(handler ...RestHandler) {
 	for _, h := range handler {
 		h.Register(r.app)
 	}
+
+	// swagger
+	r.app.Get("/swagger/*", swagger.HandlerDefault)
 }
 
 func (r *RestApp) GetApp() *fiber.App {
 	return r.app
 }
 
+//	@title			Rinha Backend API - Concorrencia
+//	@version		0.0.2
+//	@description	Servidor Web "Rinha de Backend 2 - Concorrencia".
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	API Support
+//	@contact.url	https://github.com/marcusadriano
+//	@contact.email	marcusadriano.pereira@gmail.com
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host	localhost:8080
 func (r *RestApp) Run() {
 
 	port := os.Getenv("SERVER_PORT")

@@ -1,0 +1,166 @@
+definitions:
+  http.GetBalanceResponse:
+    properties:
+      balance:
+        type: integer
+      limit:
+        type: integer
+      name:
+        type: string
+      sum_transactions:
+        type: integer
+      transactions:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  http.createTransactionRequest:
+    properties:
+      descricao:
+        maxLength: 10
+        minLength: 1
+        type: string
+      tipo:
+        enum:
+        - c
+        - d
+        type: string
+      valor:
+        type: integer
+    required:
+    - descricao
+    - tipo
+    - valor
+    type: object
+  service.Balance:
+    properties:
+      data_extrato:
+        type: string
+      limite:
+        type: integer
+      total:
+        type: integer
+    type: object
+  service.Statements:
+    properties:
+      saldo:
+        $ref: '#/definitions/service.Balance'
+      ultimas_transacoes:
+        items:
+          $ref: '#/definitions/service.Transaction'
+        type: array
+    type: object
+  service.Transaction:
+    properties:
+      descricao:
+        type: string
+      realizado_em:
+        type: string
+      tipo:
+        $ref: '#/definitions/service.TransactionType'
+      valor:
+        type: integer
+    type: object
+  service.TransactionCreated:
+    properties:
+      limite:
+        type: integer
+      saldo:
+        type: integer
+    type: object
+  service.TransactionType:
+    enum:
+    - d
+    - c
+    type: string
+    x-enum-varnames:
+    - Debit
+    - Credit
+host: localhost:8080
+info:
+  contact:
+    email: marcusadriano.pereira@gmail.com
+    name: API Support
+    url: https://github.com/marcusadriano
+  description: Servidor Web "Rinha de Backend 2 - Concorrencia".
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Rinha Backend API - Concorrencia
+  version: 0.0.2
+paths:
+  /clientes/{id}/extrato:
+    get:
+      description: Extrato
+      parameters:
+      - description: ID do usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.Statements'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Obtem o extrato com as 10 ultimas transacoes e o saldo atual.
+      tags:
+      - clientes
+  /clientes/{id}/transacoes:
+    post:
+      consumes:
+      - application/json
+      description: Eh necessario informacao do valor, tipo (debito ou credito) e descricao.
+      parameters:
+      - description: ID do usuario
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Transacao
+        in: body
+        name: transacao
+        required: true
+        schema:
+          $ref: '#/definitions/http.createTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.TransactionCreated'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            type: string
+      summary: Criar uma nova transacao para o usuario.
+      tags:
+      - clientes
+  /clientes/saldos:
+    get:
+      description: Saldo e somatoria das transacoes.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/http.GetBalanceResponse'
+            type: array
+      summary: Obtem todos os saldos e a soma de todas as transacoes.
+      tags:
+      - clientes
+swagger: "2.0"

@@ -27,6 +27,13 @@ type GetBalanceResponse struct {
 	Transactions    int64  `json:"transactions"`
 }
 
+// GetBalances godoc
+//	@Summary		Obtem todos os saldos e a soma de todas as transacoes.
+//	@Description	Saldo e somatoria das transacoes.
+//	@Tags			clientes
+//	@Produce		json
+//	@Success		200	{array}	GetBalanceResponse
+//	@Router			/clientes/saldos [get]``
 func (r *BalanceRestHandler) GetBalances(c *fiber.Ctx) error {
 	ctx := c.Context()
 

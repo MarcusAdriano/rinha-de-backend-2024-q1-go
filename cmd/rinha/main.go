@@ -10,6 +10,8 @@ import (
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/repository"
 	"github.com/marcusadriano/rinha-de-backend-2024-q1/internal/service"
 	"github.com/rs/zerolog/log"
+
+	_ "github.com/marcusadriano/rinha-de-backend-2024-q1/docs"
 )
 
 func createApp() *http.RestApp {
