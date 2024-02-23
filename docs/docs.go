@@ -24,6 +24,29 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/clientes/saldos": {
+            "get": {
+                "description": "Saldo e somatoria das transacoes.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clientes"
+                ],
+                "summary": "Obtem todos os saldos e a soma de todas as transacoes.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/http.GetBalanceResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/clientes/{id}/extrato": {
             "get": {
                 "description": "Extrato",
@@ -114,6 +137,29 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "http.GetBalanceResponse": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sum_transactions": {
+                    "type": "integer"
+                },
+                "transactions": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "http.createTransactionRequest": {
             "type": "object",
             "required": [
