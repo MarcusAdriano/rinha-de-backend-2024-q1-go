@@ -5,7 +5,7 @@ go 1.21.4
 require (
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/gofiber/contrib/fiberzerolog v0.2.3
-	github.com/gofiber/fiber/v2 v2.52.0
+	github.com/gofiber/fiber/v2 v2.52.1
 	github.com/jackc/pgx/v5 v5.5.3
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.8.4
